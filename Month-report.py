@@ -28,6 +28,7 @@ exchange_ric_list = {"Taiwan Stock Exchage": "\.TW",
                      'UK-FTSE': '\.FTSE'}
 
 client_list = {'sinopac01': 'sino', 'iocbc01': 'iocbc'}
+# , 'hsbc01': 'hsbc'}
 
 exchange_list = ['Taiwan Stock Exchage', 'Hong Kong Stock Exchange', 'UK - London Stock Exchange',
                  'China Shanghai Stock Exchange', 'China Shenzhen Stock Exchange', 'JP-Tokyo Stock Exchange',
@@ -50,14 +51,15 @@ excel_row = list(
 
 # Getting today's date and the last month date
 todayDate = datetime.date.today()
-last_month_of_year = (todayDate.replace(day=1) - datetime.timedelta(days=1)).strftime("%Y")
+last_month_of_year = (todayDate.replace(
+    day=1) - datetime.timedelta(days=1)).strftime("%Y")
 last_month = (todayDate.replace(day=1) -
               datetime.timedelta(days=1)).strftime("%m")
 last_month_numberofdata = (todayDate.replace(
     day=1) - datetime.timedelta(days=1)).strftime("%d")
-print("Month_Of_Year",last_month_of_year)    
+print("Last_Month_Of_Year", last_month_of_year)
 print("Last_Month", last_month)
-print("last_month_numberofdata", last_month_numberofdata)
+print("Last_Month_Number_Of_Data", last_month_numberofdata)
 
 
 now = datetime.datetime.now()
@@ -97,22 +99,24 @@ border = workbook.add_format({'border': 2})
 def wdss_logs_combine():
     # Text with formatting.
     # Add month of day  in row
-    for col_num, data in enumerate(range((numberofdata+1))):
-        worksheet1.write(0, col_num, data, bold_yellow)
-        worksheet1.write(1, col_num, "='wdss logs-"+last_month+"'!" +
-                         excel_row[col_num]+"2+'wdss logs-"+last_month+"'!"+excel_row[col_num]+"3", border)
-        worksheet1.write(2, col_num, "='wdss logs-"+last_month+"'!" +
-                         excel_row[col_num]+"7+'wdss logs-"+last_month+"'!"+excel_row[col_num]+"8", border)
+
+    row_of_client = 1
+    refer_data_row = 2
+
+    for ref in client_list.keys():
+        for col_num, data in enumerate(range((numberofdata+1))):
+            worksheet1.write(0, col_num, data, bold_yellow)
+            worksheet1.write(row_of_client, col_num, "='wdss logs-"+last_month+"'!" +
+                             excel_row[col_num]+str(refer_data_row)+"+'wdss logs-"+last_month+"'!"+excel_row[col_num]+str(refer_data_row+1), border)
+
+        # Text with formatting.
+        worksheet1.write('A'+str(row_of_client+1), ref, bold)
+        row_of_client += 1
+        refer_data_row += 5
 
     # Write some simple text.
     worksheet1.write('A1', 'User / Date', bold_yellow)
-
-    # Text with formatting.
-    for ref in client_list.keys():
-        A = 1
-        worksheet1.write('A'+str(A), ref, bold)
-        A +=1
-        # Create a new chart object. In this case an embedded chart.
+    # Create a new chart object. In this case an embedded chart.
     """
     chart1 = workbook.add_chart({'type': 'line'})
 
@@ -135,6 +139,7 @@ def wdss_logs_combine():
     worksheet1.insert_chart('D2', chart1, {'x_offset': 25, 'y_offset': 10})
     """
 
+
 def wdss_logs_month():
     row_1 = 1
     row_2 = 2
@@ -143,7 +148,7 @@ def wdss_logs_month():
         zone_B = []
         zone_A.clear()
         zone_B.clear()
-        # Add month of day  in row
+        # Add month of day  in row last_month_numberofdata
         for col_num, data in enumerate(range(1, int(last_month_numberofdata)+1)):
             zone_A.clear()
             zone_B.clear()
@@ -151,41 +156,37 @@ def wdss_logs_month():
             worksheet2.write(0, col_num+1, data, bold_yellow)
             worksheet2.write(5, col_num+1, data, bold_yellow)
             date = (f"{int(data):02}")
-            print(date)
 
-
-            wdss_A = sp.getoutput("cat /home/hli/Downloads/wdss_prod_a/wdss_logs/mon_non/mon_non_closed_"+last_month_of_year+"-"+last_month+'-' +date+"_"+ref+".csv | awk -F ',' '{print $3}' | sort -u")
-            wdss_B = sp.getoutput("cat /home/hli/Downloads/wdss_prod_b/wdss_logs/mon_non/mon_non_closed_"+last_month_of_year+"-"+last_month+'-' +date+"_"+ref+".csv | awk -F ',' '{print $3}' | sort -u")
-
+            wdss_A = sp.getoutput("cat /home/hli/Downloads/wdss_prod_a/wdss_logs/mon_non/mon_non_closed_" +
+                                  last_month_of_year+"-"+last_month+'-' + date+"_"+ref+".csv | awk -F ',' '{print $3}' | sort -u")
+            wdss_B = sp.getoutput("cat /home/hli/Downloads/wdss_prod_b/wdss_logs/mon_non/mon_non_closed_" +
+                                  last_month_of_year+"-"+last_month+'-' + date+"_"+ref+".csv | awk -F ',' '{print $3}' | sort -u")
             for A in wdss_A.split():
                 zone_A.append(int(A))
 
             for B in wdss_B.split():
                 zone_B.append(int(B))
 
-
-
             worksheet2.write(row_1, col_num+1, int(max(zone_A)), bold)
             worksheet2.write(row_2, col_num+1, int(max(zone_B)), bold)
-        row_1+= 5
-        row_2+= 5
-        
-    # row User / Date ,client A and B 
-    User_Date   =  1
-    client_Zone_A =2
-    client_Zone_B =3 
+        row_1 += 5
+        row_2 += 5
+
+    # row User / Date ,client A and B
+    User_Date = 1
+    client_Zone_A = 2
+    client_Zone_B = 3
     for ref in client_list.keys():
         worksheet2.write('A'+str(User_Date), 'User / Date', bold_yellow)
         worksheet2.write('A'+str(client_Zone_A), ref+'(Zone A)', bold)
         worksheet2.write('A'+str(client_Zone_B), ref+'(Zone B)', bold)
 
-        User_Date+=5
-        client_Zone_A +=5
-        client_Zone_B+=5
+        User_Date += 5
+        client_Zone_A += 5
+        client_Zone_B += 5
 
 
 def Total_connection_sinopac01():
-    m = 3
     for col_num, data in enumerate(exchange_list):
         worksheet3.write(1, col_num+1, data, bold_yellow)
 
@@ -204,7 +205,6 @@ def Total_connection_sinopac01():
 
 
 def Total_connection_iocbc01():
-    m = 3
     for col_num, data in enumerate(exchange_list):
         worksheet4.write(1, col_num+1, data, bold_yellow)
 
@@ -226,9 +226,8 @@ def Unique_User_sinopac01():
     res = []
     market_unique_user = []
     total_unique_user_sino = []
-    
+
     market_unique_user_list = []
-    m = 3
     for col_num, data in enumerate(exchange_list):
         worksheet5.write(1, col_num+1, data, bold_yellow)
 
@@ -270,7 +269,6 @@ def Unique_User_sinopac01():
         print(market_unique_user_list)
     for col_num, data in enumerate(market_unique_user_list):
         worksheet5.write(2, col_num+1, data, bold)
-    
 
 
 def Unique_User_iocbc01():
@@ -279,7 +277,6 @@ def Unique_User_iocbc01():
     total_unique_user_iocbc = []
     market_unique_user_list = []
 
-    m = 3
     for col_num, data in enumerate(exchange_list):
         worksheet6.write(1, col_num+1, data, bold_yellow)
 
@@ -322,6 +319,7 @@ def Unique_User_iocbc01():
     for col_num, data in enumerate(market_unique_user_list):
         worksheet6.write(2, col_num+1, data, bold)
 
+
 def Unique_User():
     res = []
     ric_res = []
@@ -329,19 +327,22 @@ def Unique_User():
     total_unique_user = []
     market_unique_user_list = []
     row = 1
-    A1=1
-    A2=2
-    A3=3
+    A1 = 1
+    A2 = 2
+    A3 = 3
     x = 0
     for ref in client_list.keys():
         for col_num, data in enumerate(exchange_list):
             worksheet7.write(row, col_num+1, data, bold_yellow)
 
         worksheet7.write('A'+str(A1), ref, bold_yellow)
-        worksheet7.write('A'+str(A2), 'Unique User Count-Realtime exch data', bold_yellow)
-        worksheet7.write('A'+str(A3), (calendar.month_name[int(last_month)]), bold)
+        worksheet7.write(
+            'A'+str(A2), 'Unique User Count-Realtime exch data', bold_yellow)
+        worksheet7.write(
+            'A'+str(A3), (calendar.month_name[int(last_month)]), bold)
         worksheet7.write('W'+str(A2), 'Total unique user', bold_yellow)
 
+        # Total unique user in W3
         total_unique_user_A = sp.getoutput(
             "grep -B1 'Subscribe' /home/hli/Downloads/wds/A/wds-servlet.log."+last_month_of_year+"-"+last_month+"-*|grep Authenticated | grep 'uid="+client_list[ref]+"' | awk -F '[ ,]' '{print $13}' |sort -u")
         total_unique_user_B = sp.getoutput(
@@ -367,36 +368,31 @@ def Unique_User():
                                         ric+"'|grep Authenticated | grep 'uid="+client_list[ref]+"' | awk -F '[ ,]' '{print $13}'|sort -u")
             market_ric_B = sp.getoutput("grep -B1 'Subscribe' /home/hli/Downloads/wds/B/wds-servlet.log."+last_month_of_year+"-"+last_month+"-*| grep -B1 '" +
                                         ric+"'|grep Authenticated | grep 'uid="+client_list[ref]+"' | awk -F '[ ,]' '{print $13}'|sort -u")
-        for sub in market_ric_A.split()+market_ric_B.split():
-            ric_res.append(sub)
-        for x in ric_res:
-            if x not in market_unique_user:
-                market_unique_user.append(x) 
-        
-        print(market_unique_user)
-        market_unique_user_list.append(len(market_unique_user))
-        print(market_unique_user_list)
+            for sub in market_ric_A.split()+market_ric_B.split():
+                ric_res.append(sub)
+            for x in ric_res:
+                if x not in market_unique_user:
+                    market_unique_user.append(x)
+
+            market_unique_user_list.append(len(market_unique_user))
+            print(market_unique_user_list)
         for col_num, data in enumerate(market_unique_user_list):
             worksheet7.write(A2, col_num+1, data, bold)
-        market_unique_user_list.clear() 
-        row+=4
-        A1+=4
-        A2+=4
-        A3+=4
+        market_unique_user_list.clear()
+        row += 4
+        A1 += 4
+        A2 += 4
+        A3 += 4
 
 
-
-
-
-
-
-#dss_logs_combine()
-#wdss_logs_month()
-#Total_connection_sinopac01()
-#Total_connection_iocbc01()
-#Unique_User_sinopac01()
-#Unique_User_iocbc01()
+wdss_logs_combine()
+wdss_logs_month()
+Total_connection_sinopac01()
+Total_connection_iocbc01()
+Unique_User_sinopac01()
+Unique_User_iocbc01()
 Unique_User()
 print("All sheets has been done.")
 
 workbook.close()
+
