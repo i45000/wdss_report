@@ -36,9 +36,6 @@ exchange_list = ['Taiwan Stock Exchage', 'Hong Kong Stock Exchange', 'UK - Londo
                  'Australian Stock Exchange',	'Singapore',	'Malaysia',	'Thailand SET',	'Indonesia Stock Exchange(Jakarta)',
                  'Philippine Stock Exchange',	'HK-HSI',	'US-DJI',	'US-IXIC',	'SG-STI',	'UK-FTSE']
 
-ric_list = ["\.TW,", "\.HK,", "\.L,", "\.SS,", "\.SZ,", "\.T,", "\.NB,", "\.OQ,", "\.N,", "\.A,",
-            "\.AX,", "\.SI,", "\.KL,", "\.BK,", "\.JK,", "\.PS,", "\.HSI,", "\.DJI,", "\.IXIC,", "\.STI,", "\.FTSE,"]
-
 
 # excel row A to AE
 excel_row = list(
@@ -68,13 +65,26 @@ numberofdata = calendar.monthrange(now.year, now.month)[1]
 # Create an new Excel file and add a worksheet1
 workbook = xlsxwriter.Workbook(
     '/home/hli/Downloads/wds/B/websock streaming'+str(last_month)+'.xlsx')
-worksheet1 = workbook.add_worksheet("wdss logs combine")
+worksheet1 = workbook.add_worksheet("wdss-logs-combine")
 worksheet2 = workbook.add_worksheet("wdss logs-"+str(last_month))
 worksheet3 = workbook.add_worksheet("Total connection sinopac01")
 worksheet4 = workbook.add_worksheet("Total connection iocbc01")
 worksheet5 = workbook.add_worksheet("Unique User sinopac01")
 worksheet6 = workbook.add_worksheet("Unique User iocbc01")
-worksheet7 = workbook.add_worksheet("Unique User ")
+worksheet7 = workbook.add_worksheet("Unique User")
+
+"""
+for ref in client_list.keys():
+    print(ref)
+    worksheet_name = "_workbook"
+    client_ref=ref+worksheet_name
+    client_ref= workbook.add_worksheet("Total connection  "+ref)
+
+    for col_num, data in enumerate(exchange_list):
+        client_ref.write(1, col_num+1, data)
+"""
+
+
 
 # Widen the first column to make the text clearer.
 worksheet1.set_column('A:A', 13)
@@ -116,28 +126,6 @@ def wdss_logs_combine():
 
     # Write some simple text.
     worksheet1.write('A1', 'User / Date', bold_yellow)
-    # Create a new chart object. In this case an embedded chart.
-    """
-    chart1 = workbook.add_chart({'type': 'line'})
-
-    # Configure the first series.
-    chart1.add_series({
-        'name':       '=wdss logs combine!$A$2',
-        'categories': '=wdss logs combine!$B$1:$AF$1',
-        'values':     '=wdss logs combine!$B$2:$AF$2',
-    })
-
-    # Add a chart title and some axis labels.
-    chart1.set_title ({'name': 'iocbc01 max connection'})
-    chart1.set_x_axis({'name': 'December'})
-    chart1.set_y_axis({'name': 'Connection'})
-
-    # Set an Excel chart style. Colors with white outline and shadow.
-    chart1.set_style(10)
-
-    # Insert the chart into the worksheet (with an offset).
-    worksheet1.insert_chart('D2', chart1, {'x_offset': 25, 'y_offset': 10})
-    """
 
 
 def wdss_logs_month():
@@ -190,11 +178,11 @@ def Total_connection_sinopac01():
     for col_num, data in enumerate(exchange_list):
         worksheet3.write(1, col_num+1, data, bold_yellow)
 
-    for col_num, ric in enumerate(ric_list):
+    for col_num, ric in enumerate(exchange_ric_list.values()):
         wdss_A = sp.getoutput(
-            "grep -A1 -i auth  /home/hli/Downloads/wds/A/wds-servlet.log."+last_month_of_year+"-"+last_month+"-* |grep -A1 -i 'uid=sino' |grep Subscribe | grep '"+ric+"' |wc -l")
+            "grep -A1 -i auth  /home/hli/Downloads/wds/A/wds-servlet.log."+last_month_of_year+"-"+last_month+"-* |grep -A1 -i 'uid=sino' |grep Subscribe | grep '"+ric+",' |wc -l")
         wdss_B = sp.getoutput(
-            "grep -A1 -i auth  /home/hli/Downloads/wds/B/wds-servlet.log."+last_month_of_year+"-"+last_month+"-* |grep -A1 -i 'uid=sino' |grep Subscribe | grep '"+ric+"' |wc -l")
+            "grep -A1 -i auth  /home/hli/Downloads/wds/B/wds-servlet.log."+last_month_of_year+"-"+last_month+"-* |grep -A1 -i 'uid=sino' |grep Subscribe | grep '"+ric+",' |wc -l")
         worksheet3.write(2, col_num+1, int(wdss_A)+int(wdss_B), border)
 
     worksheet3.write('A1', 'sinopac01', bold_yellow)
@@ -208,11 +196,11 @@ def Total_connection_iocbc01():
     for col_num, data in enumerate(exchange_list):
         worksheet4.write(1, col_num+1, data, bold_yellow)
 
-    for col_num, ric in enumerate(ric_list):
+    for col_num, ric in enumerate(exchange_ric_list.values()):
         wdss_A = sp.getoutput(
-            "grep -A1 -i auth  /home/hli/Downloads/wds/A/wds-servlet.log."+last_month_of_year+"-"+last_month+"-* |grep -A1 -i 'uid=iocbc' |grep Subscribe | grep '"+ric+"' |wc -l")
+            "grep -A1 -i auth  /home/hli/Downloads/wds/A/wds-servlet.log."+last_month_of_year+"-"+last_month+"-* |grep -A1 -i 'uid=iocbc' |grep Subscribe | grep '"+ric+",' |wc -l")
         wdss_B = sp.getoutput(
-            "grep -A1 -i auth  /home/hli/Downloads/wds/B/wds-servlet.log."+last_month_of_year+"-"+last_month+"-* |grep -A1 -i 'uid=iocbc' |grep Subscribe | grep '"+ric+"' |wc -l")
+            "grep -A1 -i auth  /home/hli/Downloads/wds/B/wds-servlet.log."+last_month_of_year+"-"+last_month+"-* |grep -A1 -i 'uid=iocbc' |grep Subscribe | grep '"+ric+",' |wc -l")
         worksheet4.write(2, col_num+1, int(wdss_A)+int(wdss_B), border)
 
     worksheet4.write('A1', 'iocbc01', bold_yellow)
@@ -252,7 +240,7 @@ def Unique_User_sinopac01():
     worksheet5.write('W3', len(total_unique_user_sino), bold)
 
     # For ric unique_user
-    for ric in ric_list:
+    for ric in exchange_ric_list.values():
         market_unique_user.clear()
         res.clear()
         market_ric_A = sp.getoutput("grep -B1 'Subscribe' /home/hli/Downloads/wds/A/wds-servlet.log."+last_month_of_year+"-"+last_month+"-*| grep -B1 '" +
@@ -301,7 +289,7 @@ def Unique_User_iocbc01():
     worksheet6.write('W3', len(total_unique_user_iocbc), bold)
 
     # For unique_user by ric(exchange)
-    for ric in ric_list:
+    for ric in exchange_ric_list.values():
         market_unique_user.clear()
         res.clear()
         market_ric_A = sp.getoutput("grep -B1 'Subscribe' /home/hli/Downloads/wds/A/wds-servlet.log."+last_month_of_year+"-"+last_month+"-*| grep -B1 '" +
@@ -361,7 +349,7 @@ def Unique_User():
         total_unique_user.clear()
 
         # For unique_user by ric(exchange)
-        for ric in ric_list:
+        for ric in exchange_ric_list.values():
             market_unique_user.clear()
             ric_res.clear()
             market_ric_A = sp.getoutput("grep -B1 'Subscribe' /home/hli/Downloads/wds/A/wds-servlet.log."+last_month_of_year+"-"+last_month+"-*| grep -B1 '" +
@@ -383,6 +371,40 @@ def Unique_User():
         A1 += 4
         A2 += 4
         A3 += 4
+#insert Line Chart in wdss-logs-combine sheet.
+def client_line_chart():
+    # Create a new chart object. In this case an embedded chart.
+    chart1 = workbook.add_chart({'type': 'line'})
+    chart2 = workbook.add_chart({'type': 'line'})
+
+    # Configure the first series.
+    chart1.add_series({
+        'name':       "='wdss-logs-combine'!$A$2",
+        'categories': "='wdss-logs-combine'!$B$1:$AF$1",
+        'values':     "='wdss-logs-combine'!$B$2:$AF$2"
+    })
+
+    chart2.add_series({
+        'name':       "='wdss-logs-combine'!$A$3",
+        'categories': "='wdss-logs-combine'!$B$1:$AF$1",
+        'values':     "='wdss-logs-combine'!$B$3:$AF$3"
+    })
+
+    # Add a chart title and some axis labels.
+    chart1.set_title ({'name': 'sinopac max connection'})
+    chart1.set_x_axis({'name': (calendar.month_name[int(last_month)])})
+    chart1.set_y_axis({'name': 'Connection'})
+
+    chart2.set_title ({'name': 'iocbc max connection'})
+    chart2.set_x_axis({'name': (calendar.month_name[int(last_month)])})
+    chart2.set_y_axis({'name': 'Connection'})
+
+    # Set an Excel chart style. Colors with white outline and shadow.
+    chart1.set_style(10)
+    chart2.set_style(10)
+    # Insert the chart into the worksheet (with an offset).
+    worksheet1.insert_chart('D2', chart1, {'x_offset': 25, 'y_offset': 10})
+    worksheet1.insert_chart('D2', chart2, {'x_offset': 25, 'y_offset': 10})
 
 
 wdss_logs_combine()
@@ -392,6 +414,7 @@ Total_connection_iocbc01()
 Unique_User_sinopac01()
 Unique_User_iocbc01()
 Unique_User()
+client_line_chart()
 print("All sheets has been done.")
 
 workbook.close()
