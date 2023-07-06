@@ -79,7 +79,10 @@ file_time = (datetime.datetime.today() -
              datetime.timedelta(days=2)).strftime("%Y-%m-%d")
 print(file_time)
 max_attempts = 3
-f = open('C:\\Users\\hli\\Desktop\\Python\\output_log_FTP.txt', 'a')
+
+def write_to_log(message):
+    f = open('C:\\Users\\hli\\Desktop\\Python\\output_log_FTP.txt', 'a')
+    f.write(message + '\n')
 
 def time_stamp():
     execute_date = (datetime.datetime.today() -
@@ -96,7 +99,7 @@ def clear_log_statistics_stamp():
 def do_ssh_command_140():
     # Open the file for writing
     print("running nohup command")
-    f.write('running nohup command')
+    write_to_log('running nohup command')
     delete_keyword = ["ERROR", "Error", "Instrument",
                       "Unwatch", "Accepted", "Auto-close", "Closing...", "Unsubscribe", "Watch:"]
     # 04-05-2023  #05-05-2023   #06-05-2023
@@ -130,7 +133,7 @@ def do_ssh_command_140():
             # cmd_output = stdout.read()
             # print('log printing A: ', command_A, cmd_output)
             print(client_name + " : "+command_A)
-            f.write(client_name + " : "+command_A)
+            write_to_log(client_name + " : "+command_A)
             command_B = 'nohup ' + wdss_checkLog_b+' -d ' + \
                 time_stamp()+' -s "00:00:00" -e "23:59:59" -u'+client_name+' -t0 &'
             (stdin, stdout, stderr) = ssh.exec_command(command_B)
@@ -138,7 +141,7 @@ def do_ssh_command_140():
             # cmd_output = stdout.read()
             # print('log printing B: ', command_B, cmd_output)
             print(client_name + " : "+command_B)
-            f.write(client_name + " : "+command_B)
+            write_to_log(client_name + " : "+command_B)
 
         (stdin, stdout, stderr) = ssh.exec_command("disown -a")
         print("Done")
@@ -149,7 +152,7 @@ def do_ssh_command_140():
 
 
 def download_wdss_log_A_pro():
-    print("Stating in wdss A production")
+    print("Start downloading in wdss A production")
     wdss_log_filename_A1 = ("wds-servlet.log."+time_stamp())
 
     for attempt in range(max_attempts):
@@ -175,7 +178,7 @@ def download_wdss_log_A_pro():
 
 
 def download_wdss_log_B_pro():
-    print("Starting in wdss B production")
+    print("Start downloading in wdss B production")
     wdss_log_filename_B1 = ("wds-servlet.log." + time_stamp())
     for attempt in range(max_attempts):
         try:
@@ -207,46 +210,46 @@ def download_wdss_log_B_pro():
 
 
 def upload_wdss_log_to_140():
-    print("Stating in wdss A")
-    f.write("Stating in wdss A")
+    print("Start uploading in wdss A log and wdss B log")
+    write_to_log("Start uploading in wdss A log and wdss B log")
     wdss_log_filename_A_B_fullname = ("wds-servlet.log."+time_stamp())
     print("wdss_log_file_download", wdss_log_filename_A_B_fullname)
-    f.write("wdss_log_file_download", wdss_log_filename_A_B_fullname)
+    write_to_log("wdss_log_file_download  " + wdss_log_filename_A_B_fullname)
     with pysftp.Connection(host=host_dev_140, port=port_dev, username=username_dev, password=password_dev, cnopts=cnopts) as serv_details:
         print("successfully in Zone A")
-        f.write("successfully in Zone A")
+        write_to_log("successfully in Zone A")
         for relPath, dirs, files in os.walk(Mywin_Dir_A):
             if (wdss_log_filename_A_B_fullname in files):
                 fullPath = os.path.join(
                     Mywin_Dir_A, relPath, wdss_log_filename_A_B_fullname)
                 print(fullPath)
-                f.write(fullPath)
+                write_to_log(fullPath)
                 print("Upload in A .......")
-                f.write("Upload in A .......")        
+                write_to_log("Upload in A .......")        
                 serv_details.put(fullPath, Dev_140_wdss_log_a +
                                  wdss_log_filename_A_B_fullname)
                 print(wdss_log_filename_A_B_fullname,
                       "uploaded successfully in Zone A")
-                f.write(wdss_log_filename_A_B_fullname,
-                      "uploaded successfully in Zone A")        
+                write_to_log(wdss_log_filename_A_B_fullname +
+                      " uploaded successfully in Zone A")        
         for relPath, dirs, files in os.walk(Mywin_Dir_B):
             if (wdss_log_filename_A_B_fullname in files):
                 fullPath = os.path.join(
                     Mywin_Dir_B, relPath, wdss_log_filename_A_B_fullname)
                 print(fullPath)
-                f.write(fullPath)
+                write_to_log(fullPath)
                 print("Upload in B .......")
-                f.write("Upload in B .......")
+                write_to_log("Upload in B .......")
                 serv_details.put(fullPath, Dev_140_wdss_log_b +
                                  wdss_log_filename_A_B_fullname)
                 print(wdss_log_filename_A_B_fullname,
                       "uploaded successfully in Zone B")
-                f.write(wdss_log_filename_A_B_fullname,
-                      "uploaded successfully in Zone B")
+                write_to_log(wdss_log_filename_A_B_fullname+
+                      " uploaded successfully in Zone B")
 
         serv_details.close()
     print("End upload and close in wdss A and B")
-    f.write("End upload and close in wdss A and B")
+    write_to_log("End upload and close in wdss A and B")
 
 # ----------------------------------------------------------------------------------
 def download_wdss_log_11_pro():
